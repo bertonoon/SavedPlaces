@@ -1,8 +1,11 @@
 package eu.tutorials.savedplaces.database
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import eu.tutorials.savedplaces.models.SavedPlaceModel
 
@@ -63,6 +66,65 @@ class DatabaseHandler(context: Context) :
 
         db.close() // Closing database connection
         return result
+    }
+
+    fun updateSavedPlace(savedPlace: SavedPlaceModel): Int {
+        val db = this.writableDatabase
+
+        val contentValues = ContentValues()
+        contentValues.put(KEY_TITLE, savedPlace.title) // HappyPlaceModelClass TITLE
+        contentValues.put(KEY_IMAGE, savedPlace.image) // HappyPlaceModelClass IMAGE
+        contentValues.put(KEY_DESCRIPTION, savedPlace.description) // HappyPlaceModelClass DESCRIPTION
+        contentValues.put(KEY_DATE, savedPlace.date) // HappyPlaceModelClass DATE
+        contentValues.put(KEY_LOCATION, savedPlace.location) // HappyPlaceModelClass LOCATION
+        contentValues.put(KEY_LATITUDE, savedPlace.latitude) // HappyPlaceModelClass LATITUDE
+        contentValues.put(KEY_LONGITUDE, savedPlace.longitude) // HappyPlaceModelClass LONGITUDE
+
+        // Inserting Row
+        val success = db.update(TABLE_SAVED_PLACE, contentValues, KEY_ID + "=" + savedPlace.id,null)
+
+        db.close() // Closing database connection
+        return success
+    }
+
+
+    @SuppressLint("Range")
+    fun getPlacesList():ArrayList<SavedPlaceModel>{
+        val placeList : ArrayList<SavedPlaceModel> = arrayListOf()
+        val selectQuery = "SELECT * FROM $TABLE_SAVED_PLACE"
+        val db = this.readableDatabase
+
+        try{
+            val cursor : Cursor = db.rawQuery(selectQuery, null)
+            if (cursor.moveToFirst()){
+                do {
+                    val place = SavedPlaceModel(
+                        cursor.getInt(cursor.getColumnIndex(KEY_ID)),
+                        cursor.getString(cursor.getColumnIndex(KEY_TITLE)),
+                        cursor.getString(cursor.getColumnIndex(KEY_IMAGE)),
+                        cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION)),
+                        cursor.getString(cursor.getColumnIndex(KEY_DATE)),
+                        cursor.getString(cursor.getColumnIndex(KEY_LOCATION)),
+                        cursor.getDouble(cursor.getColumnIndex(KEY_LATITUDE)),
+                        cursor.getDouble(cursor.getColumnIndex(KEY_LONGITUDE))
+                    )
+                    placeList.add(place)
+                } while (cursor.moveToNext())
+            }
+            cursor.close()
+
+        }catch(e: SQLiteException){
+            db.execSQL(selectQuery)
+            return ArrayList()
+        }
+        return placeList
+    }
+
+    fun deleteSavedPlace(savedPlace: SavedPlaceModel) : Int{
+        val db = this.writableDatabase
+        val success = db.delete(TABLE_SAVED_PLACE, KEY_ID +"=" + savedPlace.id,null)
+        db.close()
+        return success
     }
 
 }

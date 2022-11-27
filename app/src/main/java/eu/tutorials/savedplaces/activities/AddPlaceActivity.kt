@@ -12,6 +12,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -45,6 +46,8 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var etDate: EditText? = null
     private var tvAddImage : TextView? = null
 
+    private var mSavedPlaceDetails : SavedPlaceModel? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,12 +63,33 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
+            mSavedPlaceDetails = intent.getSerializableExtra(MainActivity.EXTRA_PLACE_DETAILS) as SavedPlaceModel
+        }
+
         dateSetListener = DatePickerDialog.OnDateSetListener{view,year,month,dayOfMonth ->
             cal.set(Calendar.YEAR,year)
             cal.set(Calendar.MONTH,month)
             cal.set(Calendar.DAY_OF_MONTH,dayOfMonth)
             updateDateInView()
         }
+        updateDateInView()
+
+        if(mSavedPlaceDetails != null){
+            supportActionBar?.title = "Edit Saved Place"
+            et_title.setText(mSavedPlaceDetails!!.title)
+            et_description.setText(mSavedPlaceDetails!!.description)
+            et_date.setText(mSavedPlaceDetails!!.date)
+            et_location.setText(mSavedPlaceDetails!!.location)
+            mLatitude = mSavedPlaceDetails!!.latitude
+            mLongitude = mSavedPlaceDetails!!.longitude
+
+            saveImageToInternalStorage = Uri.parse(
+                mSavedPlaceDetails!!.image)
+            iv_place_image.setImageURI(saveImageToInternalStorage)
+            btn_save.text = "UPDATE"
+        }
+
 
         etDate?.setOnClickListener(this)
         tvAddImage?.setOnClickListener(this)
@@ -89,6 +113,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     cal.get(Calendar.YEAR),
                     cal.get(Calendar.MONTH),
                     cal.get(Calendar.DAY_OF_MONTH)).show()
+
             }
             R.id.tv_add_image -> {
                 val pictureDialog = AlertDialog.Builder(this)
@@ -135,7 +160,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                         ).show()
                     } else -> {
                         val savedPlaceModel = SavedPlaceModel(
-                            0,
+                            if(mSavedPlaceDetails == null) 0 else mSavedPlaceDetails!!.id,
                             et_title.text.toString(),
                             saveImageToInternalStorage.toString(),
                             et_description.text.toString(),
@@ -145,20 +170,26 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                             mLongitude
                         )
                     val dbHandler = DatabaseHandler(this)
-                    val addSavedPlace = dbHandler.addSavedPlace(savedPlaceModel)
-                    if (addSavedPlace > 0){
-                        Toast.makeText(
-                            this@AddPlaceActivity,
-                            "The place details are inserted successful",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        finish()
+                    if (mSavedPlaceDetails == null) {
+                        val addSavedPlace = dbHandler.addSavedPlace(savedPlaceModel)
+                        if (addSavedPlace > 0){
+                            setResult(Activity.RESULT_OK)
+                            finish()
+                            }
                         }
+                    else {
+                        val updateSavedPlace = dbHandler.updateSavedPlace(savedPlaceModel)
+                        if (updateSavedPlace > 0){
+                            setResult(Activity.RESULT_OK)
+                            finish()
+                        }
+                    }
                     }
                 }
             }
         }
     }
+
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -170,6 +201,9 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                         val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver,contentURI)
                         saveImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
                         iv_place_image.setImageBitmap(selectedImageBitmap)
+                        Log.e("Saved image", "Path :: $saveImageToInternalStorage")
+
+
                     } catch (e: IOException){
                         e.printStackTrace()
                         Toast.makeText(this@AddPlaceActivity,"Failed to load the image from gallery",Toast.LENGTH_LONG).show()
@@ -180,6 +214,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 try {
                     saveImageToInternalStorage = saveImageToInternalStorage(thumbNail)
                     iv_place_image.setImageBitmap(thumbNail)
+                    Log.e("Saved image", "Path :: $saveImageToInternalStorage")
                 } catch (e: IOException){
                     e.printStackTrace()
                     Toast.makeText(this@AddPlaceActivity,"Failed to load the image from camera",Toast.LENGTH_LONG).show()
