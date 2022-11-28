@@ -19,6 +19,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -63,6 +67,12 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        if(!Places.isInitialized()){
+            Places.initialize(this@AddPlaceActivity,
+                resources.getString(R.string.google_maps_api_key))
+        }
+
+
         if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
             mSavedPlaceDetails = intent.getSerializableExtra(MainActivity.EXTRA_PLACE_DETAILS) as SavedPlaceModel
         }
@@ -94,7 +104,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         etDate?.setOnClickListener(this)
         tvAddImage?.setOnClickListener(this)
         btn_save?.setOnClickListener(this)
-
+        et_location?.setOnClickListener(this)
 
     }
 
@@ -108,6 +118,20 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when(v!!.id){
+            R.id.et_location -> {
+                try{
+                    val fields = listOf(
+                        Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS,
+                    )
+                    val intent =
+                        Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                            .build(this@AddPlaceActivity)
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE)
+                } catch(e: Exception) {
+                    e.printStackTrace()
+
+                }
+            }
             R.id.et_date -> {
                 DatePickerDialog(this@AddPlaceActivity, dateSetListener,
                     cal.get(Calendar.YEAR),
@@ -173,14 +197,14 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     if (mSavedPlaceDetails == null) {
                         val addSavedPlace = dbHandler.addSavedPlace(savedPlaceModel)
                         if (addSavedPlace > 0){
-                            setResult(Activity.RESULT_OK)
+                            setResult(RESULT_OK)
                             finish()
                             }
                         }
                     else {
                         val updateSavedPlace = dbHandler.updateSavedPlace(savedPlaceModel)
                         if (updateSavedPlace > 0){
-                            setResult(Activity.RESULT_OK)
+                            setResult(RESULT_OK)
                             finish()
                         }
                     }
@@ -219,6 +243,11 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     e.printStackTrace()
                     Toast.makeText(this@AddPlaceActivity,"Failed to load the image from camera",Toast.LENGTH_LONG).show()
                 }
+            } else if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE){
+                val place: Place = Autocomplete.getPlaceFromIntent(data!!)
+                et_location.setText(place.address)
+                mLatitude = place.latLng!!.latitude
+                mLongitude = place.latLng!!.longitude
             }
         }
     }
@@ -301,6 +330,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         private const val GALLERY_CODE = 1
         private const val CAMERA_CODE = 2
         private const val IMAGE_DIRECTORY = "SavedPlacesImages"
+        private const val PLACE_AUTOCOMPLETE_REQUEST_CODE = 3
     }
 
 }
