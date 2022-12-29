@@ -1,5 +1,6 @@
 package eu.tutorials.savedplaces.activities
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +33,12 @@ class SavedPlaceDetailActivity : AppCompatActivity() {
             iv_place_image.setImageURI(Uri.parse(savedPlaceDetailModel.image))
             tv_description.text = savedPlaceDetailModel.description
             tv_location.text = savedPlaceDetailModel.location
+
+            btn_view_on_map.setOnClickListener{
+                val intent = Intent(this@SavedPlaceDetailActivity, MapActivity::class.java)
+                intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS,  savedPlaceDetailModel)
+                startActivity(intent)
+            }
         }
     }
 }

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--TODO (Step 7: Adding an custom border background to an image view.)-->
-<!--START-->
-<!--All the values used are defined in the constant files.-->
+
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

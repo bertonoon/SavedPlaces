@@ -15,8 +15,7 @@ import eu.tutorials.savedplaces.database.DatabaseHandler
 import eu.tutorials.savedplaces.models.SavedPlaceModel
 import kotlinx.android.synthetic.main.item_saved_place.view.*
 
-// TODO (Step 6: Creating an adapter class for binding it to the recyclerview in the new package which is adapters.)
-// START
+
 open class SavedPlacesAdapter(
     private val context: Context,
     private var list: ArrayList<SavedPlaceModel>

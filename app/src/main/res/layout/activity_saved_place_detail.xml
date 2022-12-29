@@ -16,9 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- TODO (Step 1 : Designing the view for Happy Places Detail Activity.)-->
-    <!--1. We have added the detail_screen_image_placeholder image in the drawable folder. -->
-    <!--START-->
+
     <ScrollView
         android:id="@+id/sv_main"
         android:layout_width="match_parent"
@@ -73,6 +71,28 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_description"
                 tools:text="Location" />
+
+            <Button
+                android:id="@+id/btn_view_on_map"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/detail_screen_btn_view_on_map_marginStartEnd"
+                android:layout_marginTop="@dimen/detail_screen_btn_view_on_map_marginTop"
+                android:layout_marginEnd="@dimen/detail_screen_btn_view_on_map_marginStartEnd"
+                android:background="@drawable/shape_button_rounded"
+                android:gravity="center"
+                android:paddingTop="@dimen/detail_screen_btn_view_on_map_PaddingTopBottom"
+                android:paddingBottom="@dimen/detail_screen_btn_view_on_map_PaddingTopBottom"
+                android:text="@string/btn_text_view_on_map"
+                android:textColor="@color/white_color"
+                android:textSize="@dimen/detail_screen_btn_view_on_map_text_size"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_location" />
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
     <!--END-->

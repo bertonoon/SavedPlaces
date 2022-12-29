@@ -118,6 +118,22 @@
                     android:textSize="@dimen/edit_text_text_size" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:id="@+id/tv_select_current_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/add_place_select_current_location_marginTop"
+                android:background="@drawable/shape_image_view_border"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:padding="@dimen/add_place_select_current_location_padding"
+                android:text="@string/add_place_select_current_location_text"
+                android:textColor="@color/colorAccent"
+                android:textSize="@dimen/add_place_select_current_location_textsize"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/til_location" />
+
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/iv_place_image"
                 android:layout_width="@dimen/add_screen_place_image_size"
@@ -130,7 +146,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/til_location" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_select_current_location" />
 
             <TextView
                 android:id="@+id/tv_add_image"
@@ -148,7 +164,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.45"
                 app:layout_constraintStart_toEndOf="@+id/iv_place_image"
-                app:layout_constraintTop_toBottomOf="@+id/til_location"
+                app:layout_constraintTop_toBottomOf="@+id/tv_select_current_location"
                 app:layout_constraintVertical_bias="0.019" />
 
             <Button

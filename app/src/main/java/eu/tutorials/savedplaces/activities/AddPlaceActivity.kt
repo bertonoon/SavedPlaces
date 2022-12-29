@@ -1,6 +1,7 @@
 package eu.tutorials.savedplaces.activities
 
 import android.Manifest.permission.*
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -9,9 +10,13 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Bitmap
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -19,10 +24,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+import com.happyplaces.utils.GetAddressFromLatLng
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -52,6 +59,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     private var mSavedPlaceDetails : SavedPlaceModel? = null
 
+    private lateinit var mFusedLocationClient : FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,14 +75,18 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(
+            this@AddPlaceActivity)
+
         if(!Places.isInitialized()){
             Places.initialize(this@AddPlaceActivity,
-                resources.getString(R.string.google_maps_api_key))
+                resources.getString(R.string.google_maps_key))
         }
 
 
         if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
-            mSavedPlaceDetails = intent.getSerializableExtra(MainActivity.EXTRA_PLACE_DETAILS) as SavedPlaceModel
+            mSavedPlaceDetails = intent.getSerializableExtra(
+                MainActivity.EXTRA_PLACE_DETAILS) as SavedPlaceModel
         }
 
         dateSetListener = DatePickerDialog.OnDateSetListener{view,year,month,dayOfMonth ->
@@ -105,9 +117,52 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         tvAddImage?.setOnClickListener(this)
         btn_save?.setOnClickListener(this)
         et_location?.setOnClickListener(this)
-
+        tv_select_current_location?.setOnClickListener((this))
     }
 
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData(){
+        var mLocationRequest =
+        LocationRequest.Builder(
+        Priority.PRIORITY_HIGH_ACCURACY,
+        1000)
+        .setWaitForAccurateLocation(true)
+            .setMinUpdateIntervalMillis(500)
+            .setMaxUpdateDelayMillis(1000)
+            .setMaxUpdates(1)
+            .build()
+
+       mFusedLocationClient.requestLocationUpdates(
+           mLocationRequest, mLocationCallBack, Looper.myLooper())
+    }
+
+    private val mLocationCallBack = object : LocationCallback(){
+        override fun onLocationResult(locationResult: LocationResult) {
+            val mLastLocation : Location = locationResult.lastLocation!!
+            mLatitude = mLastLocation.latitude
+            mLongitude = mLastLocation.longitude
+
+            val addressTask = GetAddressFromLatLng(this@AddPlaceActivity,mLatitude,mLongitude)
+            addressTask.setAddressListener(object: GetAddressFromLatLng.AddressListener{
+                override fun onAddressFound(address: String?) {
+                    et_location.setText(address)
+                }
+
+                override fun onError() {
+                    Log.e("Get Address:: ","Something went wrong")
+                }
+            })
+            addressTask.getAddress()
+        }
+    }
+
+
+    private fun isLocationEnabled() : Boolean{
+        val locationManager : LocationManager = getSystemService(Context.LOCATION_SERVICE)
+                as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
 
     private fun updateDateInView(){
         val myFormat = "dd.MM.yyyy"
@@ -118,6 +173,36 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when(v!!.id){
+            R.id.tv_select_current_location ->{
+                if(!isLocationEnabled()){
+                    Toast.makeText(
+                        this,
+                        "Your location provider is turned off. Please turn it on.",
+                        Toast.LENGTH_LONG).show()
+
+                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startActivity(intent)
+                } else {
+                    Dexter.withContext(this@AddPlaceActivity).withPermissions(
+                        ACCESS_FINE_LOCATION,
+                        ACCESS_COARSE_LOCATION)
+                        .withListener(object: MultiplePermissionsListener {
+                            override fun onPermissionsChecked(report: MultiplePermissionsReport) {
+                                if (report!!.areAllPermissionsGranted()) {
+                                    requestNewLocationData()
+                                }
+                            }
+
+                            override fun onPermissionRationaleShouldBeShown(
+                                permissions: MutableList<PermissionRequest>,
+                                token: PermissionToken
+                            ) {
+                                showRationaleDialogForPermissions()
+                            }
+                        }
+                    ).onSameThread().check()
+                }
+            }
             R.id.et_location -> {
                 try{
                     val fields = listOf(

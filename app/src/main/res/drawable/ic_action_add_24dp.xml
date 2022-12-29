@@ -1,12 +1,4 @@
-<!--TODO(Step 5 : Adding an vector image for action add)-->
-<!--Steps to generate the vector image using android studio.-->
-<!-- Perform accordingly go to ==> FILE ==> NEW ==> Vector Assets
-            ==> select the image which you want as vector image
-             ==> enter the name
-             ==> click on NEXT
-             ==> click on FINISH
-             ==> there you go now the vector image will be added to your drawable folder which can be used in the components which you want.-->
-<!--STEPS-->
+
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
