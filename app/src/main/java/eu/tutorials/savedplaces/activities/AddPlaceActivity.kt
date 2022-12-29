@@ -39,6 +39,10 @@ import eu.tutorials.savedplaces.R
 import eu.tutorials.savedplaces.database.DatabaseHandler
 import eu.tutorials.savedplaces.models.SavedPlaceModel
 import kotlinx.android.synthetic.main.activity_add_place.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -142,17 +146,22 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             mLatitude = mLastLocation.latitude
             mLongitude = mLastLocation.longitude
 
-            val addressTask = GetAddressFromLatLng(this@AddPlaceActivity,mLatitude,mLongitude)
-            addressTask.setAddressListener(object: GetAddressFromLatLng.AddressListener{
-                override fun onAddressFound(address: String?) {
-                    et_location.setText(address)
-                }
+            GlobalScope.launch ( Dispatchers.IO ) {
+                async {
+                    val addressTask =
+                        GetAddressFromLatLng(this@AddPlaceActivity, mLatitude, mLongitude)
+                    addressTask.setAddressListener(object : GetAddressFromLatLng.AddressListener {
+                        override fun onAddressFound(address: String?) {
+                            et_location.setText(address)
+                        }
 
-                override fun onError() {
-                    Log.e("Get Address:: ","Something went wrong")
+                        override fun onError() {
+                            Log.e("Get Address:: ", "Something went wrong")
+                        }
+                    })
+                    addressTask.getAddress()
                 }
-            })
-            addressTask.getAddress()
+            }
         }
     }
 
